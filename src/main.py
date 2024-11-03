@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_text_splitters.character import CharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
 from langchain.chains.conversational_retrieval.base import ConversationalRetrievalChain
@@ -17,13 +17,17 @@ GROQ_API_KEY = os.environ['GROQ_API_KEY']
 
 working_dir = os.path.dirname(os.path.abspath(__file__))
 
+poppler_path = r'C:\Users\aykay\Downloads\Release-24.08.0-0\poppler-24.08.0\Library\bin'
+
 def load_document(file_path):
     loader = UnstructuredPDFLoader(file_path)
     documents = loader.load()
     return documents
 
 def setup_vectorstore(documents):
-    embeddings = HuggingFaceEmbeddings()
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+    )
     text_splitter = CharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200,
@@ -58,6 +62,7 @@ st.set_page_config(
     page_title="Chat with Document",
     page_icon="🔗",
     layout="centered"
+    
 )
 
 st.title("Chat with Document")
@@ -76,8 +81,8 @@ if uploaded_file:
     if "vectorstores" not in st.session_state:
         st.session_state.vectorstores = setup_vectorstore(load_document(file_path))
 
-    if "conversation_chat" not in st.session_state:
-        st.session_state.conversation_chat = create_chain(st.session_state.vectorstores)
+    if "conversational_chain" not in st.session_state:
+        st.session_state.conversational_chain = create_chain(st.session_state.vectorstores)
 
 for message in st.session_state.chat_history:
     with st.chat_message(message["role"]):
