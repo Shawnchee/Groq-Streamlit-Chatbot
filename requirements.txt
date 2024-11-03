@@ -3,6 +3,7 @@ groq
 python-dotenv
 langchain-community
 langchain-text-splitters
+langchain-huggingface
 langchain-groq
 unstructured
 unstructured[pdf]
