@@ -54,6 +54,51 @@ def create_chain(vectorstore):
     return chain
 
 
+st.set_page_config(
+    page_title="Chat with Document",
+    page_icon="🔗",
+    layout="centered"
+)
+
+st.title("Chat with Document")
+
+# initialize the chat history in streamlit session state
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+uploaded_file = st.file_uploader("Upload your PDF file", type=["pdf"])
+
+if uploaded_file:
+    file_path = f"{working_dir}/{uploaded_file.name}"
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
+    if "vectorstores" not in st.session_state:
+        st.session_state.vectorstores = setup_vectorstore(load_document(file_path))
+
+    if "conversation_chat" not in st.session_state:
+        st.session_state.conversation_chat = create_chain(st.session_state.vectorstores)
+
+for message in st.session_state.chat_history:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+user_input = st.chat_input("Ask a question") 
+
+if user_input:
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
+
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    with st.chat_message("assistant"):
+        response = st.session_state.conversational_chain({"question": user_input})
+        assistant_response = response["answer"]
+        st.markdown(assistant_response)
+        st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
+
+
+
 
 
 
